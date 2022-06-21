@@ -13,3 +13,10 @@ test('Get forecast', async ({ client }) => {
   response.assertStatus(200)
   response.assertBodyContains({ forecast: { periods: [] } })
 })
+
+test('No zip parameter', async ({ client }) => {
+  const response = await client.get('/forecast?address=514 w cevallos&units=si')
+
+  response.assertStatus(400)
+  response.assertBodyContains({ msg: 'You must send a zip code' })
+})
