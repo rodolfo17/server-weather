@@ -48,7 +48,10 @@ export default class ForecastsController {
         (all.units ?? 'si')
 
       const allForecast = await axios.get(forecastUrl)
-      return response.send({ forecast: allForecast.data.properties })
+      return response.send({
+        forecast: allForecast.data.properties,
+        address: dataGrids.result.addressMatches[0].addressComponents,
+      })
     } catch (error) {
       return response.status(400).send({
         msg: 'Something went wrong',
