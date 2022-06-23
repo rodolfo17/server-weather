@@ -12,6 +12,7 @@ export default class ForecastsController {
       address?: string
       zip?: string
       units?: string
+      number?: number
     } = request.all()
 
     if (!all.address) {
@@ -48,8 +49,30 @@ export default class ForecastsController {
         (all.units ?? 'si')
 
       const allForecast = await axios.get(forecastUrl)
+      let periods = []
+      if (all.number) {
+        periods = allForecast.data.properties.periods
+          .filter(
+            (period) =>
+              period.name === 'Today' ||
+              period.name === 'Monday' ||
+              period.name === 'Tuesday' ||
+              period.name === 'Wednesday' ||
+              period.name === 'Thursday' ||
+              period.name === 'Friday' ||
+              period.name === 'Saturday' ||
+              period.name === 'Sunday'
+          )
+          .slice(0, all.number)
+      } else {
+        periods = allForecast.data.properties.periods
+      }
+
       return response.send({
-        forecast: allForecast.data.properties,
+        forecast: {
+          ...allForecast.data.properties,
+          periods,
+        },
         address: dataGrids.result.addressMatches[0].addressComponents,
       })
     } catch (error) {
