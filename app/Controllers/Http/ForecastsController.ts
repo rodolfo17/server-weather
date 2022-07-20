@@ -4,7 +4,6 @@ import axios from 'axios'
 const GRID_URL =
   'https://geocoding.geo.census.gov/geocoder/locations/address?benchmark=2020&format=json&'
 const POINTS_URL = 'https://api.weather.gov/points/'
-const FORECAST_URL = 'https://api.weather.gov/gridpoints/'
 
 export default class ForecastsController {
   public async getForecast({ request, response }: HttpContextContract) {
@@ -38,17 +37,9 @@ export default class ForecastsController {
       const pointsCall = await axios.get(pointsUrl)
       const dataPoints = pointsCall.data.properties
 
-      const forecastUrl =
-        FORECAST_URL +
-        dataPoints.gridId +
-        '/' +
-        dataPoints.gridX +
-        ',' +
-        dataPoints.gridY +
-        '/forecast?units=' +
-        (all.units ?? 'si')
+      const urlFore = dataPoints.forecast + '?units=' + (all.units ?? 'si')
 
-      const allForecast = await axios.get(forecastUrl)
+      const allForecast = await axios.get(urlFore)
       let periods = []
       if (all.number) {
         periods = allForecast.data.properties.periods
@@ -74,6 +65,40 @@ export default class ForecastsController {
           periods,
         },
         address: dataGrids.result.addressMatches[0].addressComponents,
+      })
+    } catch (error) {
+      return response.status(400).send({
+        msg: 'Something went wrong',
+        error: error,
+      })
+    }
+  }
+
+  public async GetForecastCoords({ request, response }: HttpContextContract) {
+    const all: {
+      latitud?: string
+      longitud?: string
+    } = request.all()
+
+    if (!all.latitud || !all.longitud) {
+      return response.status(400).send({ msg: 'You must send latitud and longitud' })
+    }
+
+    try {
+      const pointsUrl = POINTS_URL + all.latitud + ',' + all.longitud
+      const pointsCall = await axios.get(pointsUrl)
+      const dataPoints = pointsCall.data.properties
+
+      const urlFore = dataPoints.forecast + '?units=si'
+
+      const allForecast = await axios.get(urlFore)
+
+      return response.send({
+        forecast: {
+          ...allForecast.data.properties,
+          periods: allForecast.data.properties.periods,
+        },
+        address: dataPoints.relativeLocation.properties,
       })
     } catch (error) {
       return response.status(400).send({

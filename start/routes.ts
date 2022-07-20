@@ -25,3 +25,5 @@ Route.get('/', async () => {
 })
 
 Route.get('/forecast', 'ForecastsController.getForecast')
+
+Route.get('/forecastCoords', 'ForecastsController.GetForecastCoords')
